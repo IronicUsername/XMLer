@@ -1,38 +1,11 @@
 import datetime
-import json
 import os
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
-from sepaxml import SepaDD, SepaTransfer
-
-
-def create_payment(payment: List[str]) -> Any:
-    """Lorem ipsum dolor.
-
-    Parameters
-    ----------
-    payment: List[str]
-        CSV data row.
-
-    Returns
-    -------
-    sepa: Any:
-        Lorem ipsum dolor..
-    """
-    config = json.load(open(_base_path() + '/data/config.json', 'r'))
-    p, p_type = _pack_data(payment)
-
-    if p_type == 'debit':
-        sepa = SepaDD(config, schema='pain.008.002.02', clean=True)
-    elif p_type == 'credit':
-        sepa = SepaTransfer(config, clean=True)
-
-    sepa.add_payment(p)
-
-    return sepa
+from unidecode import unidecode
 
 
-def _pack_data(payment: List[str]) -> Tuple[Dict[str, Any], str]:
+def create_payment(payment: List[str], output_path: Optional[str]) -> Tuple[Dict[str, Any], str]:
     """Create a payment object that can be handeld by the sepaxml lib.
 
     Parameters
@@ -59,7 +32,7 @@ def _pack_data(payment: List[str]) -> Tuple[Dict[str, Any], str]:
         res['amount'] = int(payment[3][1:])  # type: ignore
         res['type'] = 'RCUR'
         res['collection_date'] = datetime.date.today()  # type: ignore
-        res['mandate_id'] = payment[7]
+        res['mandate_id'] = payment[5]
         res['mandate_date'] = datetime.date.today()  # type: ignore
 
     else:
@@ -72,7 +45,14 @@ def _pack_data(payment: List[str]) -> Tuple[Dict[str, Any], str]:
     return ret
 
 
-def _base_path() -> str:
+def _generate_output(data: bytes, output_path: str):
+    f = open(output_path + 'stuff.xml', 'wb+')
+    f.write(data)
+    f.close()
+    return
+
+
+def base_path() -> str:
     """Path to project root."""
     return os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
 
@@ -90,9 +70,12 @@ def _sanatize_data(data: List[str]) -> List[str]:
     data: List[str]:
         Ready-to-go CSV data row.
     """
+    # name
+    umlauts = {ord('ä'): 'ae', ord('ü'): 'ue', ord('ö'): 'oe', ord('ß'): 'ss'}
+    data[0] = unidecode(data[0].translate(umlauts))
+
     # money amount
-    bad_chars = [',', '.']
-    data[3] = data[3].translate({ord(x): '' for x in bad_chars})
+    data[3] = data[3].translate({ord(x): '' for x in [',', '.']})
 
     # create description
     data[4] = f'{data[4]} {data[5]} {data[6]}'

@@ -29,3 +29,5 @@ myenv.sh
 .env
 
 # Other Stuff
+output/*
+data/config.json
