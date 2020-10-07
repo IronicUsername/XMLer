@@ -1,12 +1,69 @@
 from datetime import date, datetime
-import os
-from typing import Any, Dict, List, Optional, Tuple
+import json
+from typing import Any, Dict, IO, List, Tuple
 
+from click import echo
 from schwifty import IBAN
+from sepaxml import SepaDD, SepaTransfer
+from tqdm import tqdm
 from unidecode import unidecode
 
+from .utils import base_path, single_csv_row
 
-def create_payment(payment: List[str], output_path: Optional[str]) -> Tuple[Dict[str, Any], str]:
+CONFIG = json.load(open(base_path() + '/config.json', 'r'))
+
+
+def create_payment(input_file: IO[str], output_path: str) -> None:
+    today_s = str(date.today())
+    hit_credit = False
+    hit_debit = False
+
+    sepa_credit = SepaTransfer(CONFIG, clean=True)
+    sepa_debit = SepaDD(CONFIG, schema='pain.008.002.02', clean=True)
+
+    for payment in single_csv_row(input_file):
+        p, p_type = _pack_data(payment)
+
+        if p_type == 'credit':
+            hit_credit = True
+            sepa_credit.add_payment(p)
+
+        if p_type == 'debit':
+            hit_debit = True
+            sepa_debit.add_payment(p)
+
+    if hit_credit:
+        _generate_output(today_s + '_credit', sepa_credit.export(), output_path)
+
+    if hit_debit:
+        _generate_output(today_s + '_debit', sepa_debit.export(), output_path)
+
+    echo('\nDone.')
+
+
+def _generate_output(file_name: str, data: bytes, output_path: str) -> None:
+    out_path = output_path + file_name + '.xml'
+    echo(f'\nSaving file "{file_name}"" to path "{out_path}"...')
+
+    total_size = len(data)
+    block_size = 1024
+    t = tqdm(total=total_size, unit='iB', unit_scale=True)
+
+    # https://stackoverflow.com/questions/35580801/chunking-bytes-not-strings-in-python-2-and-3
+    def chunked(size, source):
+        for i in range(0, len(source), size):
+            yield source[i: i + size]
+
+    with open(out_path, 'wb') as f:
+        for i in list(chunked(block_size, data)):
+            f.write(i)
+            t.update(len(i))
+
+    echo('\nFile saved.\n\n')
+    f.close
+
+
+def _pack_data(payment: List[str]) -> Tuple[Dict[str, Any], str]:
     """Create a payment object that can be handeld by the sepaxml lib.
 
     Parameters
@@ -43,11 +100,6 @@ def create_payment(payment: List[str], output_path: Optional[str]) -> Tuple[Dict
 
     ret = (res, p_type)
     return ret
-
-
-def base_path() -> str:
-    """Path to project root."""
-    return os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
 
 
 def _sanatize_data(data: List[str]) -> List[str]:
