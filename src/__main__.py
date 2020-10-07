@@ -8,7 +8,7 @@ import click
 from helper import base_path, create_payment
 from sepaxml import SepaDD, SepaTransfer
 
-CONFIG = json.load(open(base_path() + '/data/config.json', 'r'))
+CONFIG = json.load(open(base_path() + '/config.json', 'r'))
 
 
 def _single_csv_row(input_file: IO[str]) -> Iterator[List[str]]:
