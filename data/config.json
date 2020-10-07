@@ -1,8 +1,0 @@
-{
-    "name": "Test von Testenstein",
-    "IBAN": "NL50BANK1234567890",
-    "BIC": "BANKNL2A",
-    "batch": true,
-    "creditor_id": "DE26ZZZ00000000000",
-    "currency": "EUR"
-}
