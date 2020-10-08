@@ -1,5 +1,19 @@
 import os
+import sys
 from typing import IO, Iterator, List
+
+from click import echo
+
+
+def handle_output_path(out_path: str):
+    if not out_path.endswith('/'):
+        out_path = out_path + '/'
+
+    if not os.path.exists(os.path.dirname(out_path)):
+        echo('Creating directory...')
+        os.makedirs(os.path.dirname(out_path))
+
+    return out_path
 
 
 def base_path() -> str:
@@ -21,3 +35,7 @@ def single_csv_row(input_file: IO[str]) -> Iterator[List[str]]:
             yield res
         except Exception:
             pass
+
+    if payments == 0:
+        echo('Could not load the CSV! Please, ensure, that the file has a CSV format.')
+        sys.exit(1)

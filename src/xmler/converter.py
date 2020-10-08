@@ -1,5 +1,6 @@
 from datetime import date, datetime
 import json
+from time import sleep
 from typing import Any, Dict, IO, List, Tuple
 
 from click import echo
@@ -14,6 +15,16 @@ CONFIG = json.load(open(base_path() + '/config.json', 'r'))
 
 
 def create_payment(input_file: IO[str], output_path: str) -> None:
+    """Creates a XML file from CSV data.
+
+    Parameters
+    ----------
+    input_file: IO[str]
+        Path to the CSV data.
+    output_path: str
+        Path to the output data.
+        Default is in the project-root/output.
+    """
     today_s = str(date.today())
     hit_credit = False
     hit_debit = False
@@ -21,6 +32,7 @@ def create_payment(input_file: IO[str], output_path: str) -> None:
     sepa_credit = SepaTransfer(CONFIG, clean=True)
     sepa_debit = SepaDD(CONFIG, schema='pain.008.002.02', clean=True)
 
+    echo('Getting Data...')
     for payment in single_csv_row(input_file):
         p, p_type = _pack_data(payment)
 
@@ -38,28 +50,25 @@ def create_payment(input_file: IO[str], output_path: str) -> None:
     if hit_debit:
         _generate_output(today_s + '_debit', sepa_debit.export(), output_path)
 
-    echo('\nDone.')
+    echo('Done.')
 
 
 def _generate_output(file_name: str, data: bytes, output_path: str) -> None:
+    """Writes a XML file from the extracted CSV data."""
     out_path = output_path + file_name + '.xml'
     echo(f'\nSaving file "{file_name}"" to path "{out_path}"...')
 
     total_size = len(data)
     block_size = 1024
-    t = tqdm(total=total_size, unit='iB', unit_scale=True)
 
-    # https://stackoverflow.com/questions/35580801/chunking-bytes-not-strings-in-python-2-and-3
-    def chunked(size, source):
-        for i in range(0, len(source), size):
-            yield source[i: i + size]
+    with tqdm(total=total_size, position=0, leave=True, bar_format='{desc:<5.5}{percentage:3.0f}%|{bar:50}{r_bar}') as pbar:
+        with open(out_path, 'wb') as f:
+            for i in (data[i: i + block_size] for i in range(0, len(data), block_size)):
+                pbar.update(len(i))
+                # f.write(i)
+                sleep(0.001)
 
-    with open(out_path, 'wb') as f:
-        for i in list(chunked(block_size, data)):
-            f.write(i)
-            t.update(len(i))
-
-    echo('\nFile saved.\n\n')
+    echo('File saved.\n')
     f.close
 
 
