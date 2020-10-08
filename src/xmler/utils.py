@@ -5,7 +5,8 @@ from typing import IO, Iterator, List
 from click import echo
 
 
-def handle_output_path(out_path: str):
+def handle_output_path(out_path: str) -> str:
+    """Creates output directory if needed also sanitizes output path string."""
     if not out_path.endswith('/'):
         out_path = out_path + '/'
 

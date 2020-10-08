@@ -3,8 +3,8 @@ from typing import IO, Optional
 
 import click
 
-from .converter import create_payment
-from .utils import base_path, handle_output_path
+from xmler.converter import create_payment
+from xmler.utils import base_path, handle_output_path
 
 
 @click.command()

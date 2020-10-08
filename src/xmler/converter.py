@@ -9,7 +9,7 @@ from sepaxml import SepaDD, SepaTransfer
 from tqdm import tqdm
 from unidecode import unidecode
 
-from .utils import base_path, single_csv_row
+from xmler.utils import base_path, single_csv_row
 
 CONFIG = json.load(open(base_path() + '/config.json', 'r'))
 
@@ -100,12 +100,12 @@ def _pack_data(payment: List[str]) -> Tuple[Dict[str, Any], str]:
         res['type'] = 'RCUR'
         res['collection_date'] = date.today()  # type: ignore
         res['mandate_id'] = payment[5]
-        res['mandate_date'] = payment[6]  # type: ignore
+        res['mandate_date'] = payment[6]
     else:
         p_type = 'credit'
 
         res['amount'] = int(payment[3])  # type: ignore
-        res['execution_date'] = payment[7]  # type: ignore
+        res['execution_date'] = payment[7]
 
     ret = (res, p_type)
     return ret
