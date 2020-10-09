@@ -3,8 +3,8 @@ from typing import IO, Optional
 
 import click
 
-from xmler.converter import create_payment
-from xmler.utils import base_path, handle_output_path
+from xmler.converter import create_sepa_xml
+from xmler.utility import base_path, handle_output_path, init_config
 
 
 @click.command()
@@ -28,9 +28,10 @@ def cli(input_file: IO[str], output_path: Optional[str], header: bool) -> None:
         click.echo('`input_file` has to be a CSV file.', file=sys.stderr)
         raise click.Abort()
 
+    conf = init_config()
     output_path = handle_output_path(output_path)
-
     if header:
         next(input_file)
 
-    create_payment(input_file, output_path)
+    create_sepa_xml(input_file, output_path, conf)
+    click.echo(click.style('Done.', fg='bright_green'))

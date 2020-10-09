@@ -1,5 +1,4 @@
 from datetime import date, datetime
-import json
 from time import sleep
 from typing import Any, Dict, IO, List, Tuple
 
@@ -9,12 +8,10 @@ from sepaxml import SepaDD, SepaTransfer
 from tqdm import tqdm
 from unidecode import unidecode
 
-from xmler.utils import base_path, single_csv_row
-
-CONFIG = json.load(open(base_path() + '/config.json', 'r'))
+from xmler.utility import single_csv_row
 
 
-def create_payment(input_file: IO[str], output_path: str) -> None:
+def create_sepa_xml(input_file: IO[str], output_path: str, config: Dict[str, Any]) -> None:
     """Creates a XML file from CSV data.
 
     Parameters
@@ -29,8 +26,8 @@ def create_payment(input_file: IO[str], output_path: str) -> None:
     hit_credit = False
     hit_debit = False
 
-    sepa_credit = SepaTransfer(CONFIG, clean=True)
-    sepa_debit = SepaDD(CONFIG, schema='pain.008.002.02', clean=True)
+    sepa_credit = SepaTransfer(config, clean=True)
+    sepa_debit = SepaDD(config, schema='pain.008.002.02', clean=True)
 
     echo('Getting Data...')
     for payment in single_csv_row(input_file):
@@ -50,8 +47,6 @@ def create_payment(input_file: IO[str], output_path: str) -> None:
     if hit_debit:
         _generate_output(today_s + '_debit', sepa_debit.export(), output_path)
 
-    echo('Done.')
-
 
 def _generate_output(file_name: str, data: bytes, output_path: str) -> None:
     """Writes a XML file from the extracted CSV data."""
@@ -65,7 +60,7 @@ def _generate_output(file_name: str, data: bytes, output_path: str) -> None:
         with open(out_path, 'wb') as f:
             for i in (data[i: i + block_size] for i in range(0, len(data), block_size)):
                 pbar.update(len(i))
-                # f.write(i)
+                f.write(i)
                 sleep(0.001)
 
     echo('File saved.\n')
