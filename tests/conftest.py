@@ -2,5 +2,5 @@ import pytest
 
 
 @pytest.fixture(scope='session')
-def csv_test_file():
-    pass
+def tmp_dir(tmpdir_factory):
+    tmpdir_factory.mktemp('data')

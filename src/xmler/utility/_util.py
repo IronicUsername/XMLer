@@ -26,7 +26,8 @@ def handle_output_path(out_path: str) -> str:
     return out_path
 
 
-def init_config():
+def init_config() -> None:
+    """Initialize config."""
     cnfg_path = base_path() + '/config.json'
     cnfg = None
     try:
@@ -44,19 +45,7 @@ def init_config():
 
 
 def _set_config(conf: Dict[str, Any]) -> Dict[str, Any]:
-    """Checks the validity of the given config file.
-    Sets default config if
-
-    Parameters
-    ----------
-    conf: Any
-        [description].
-
-    Returns
-    -------
-    Dict[str, Any]:
-        [description].
-    """
+    """Checks the validity of the given config file."""
     if not _validate_config(CONF_STRUC, conf):
         echo('Continue with default config file?')
         answer = input('(y)es/(n)o: ')

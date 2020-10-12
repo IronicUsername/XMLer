@@ -21,6 +21,8 @@ def create_sepa_xml(input_file: IO[str], output_path: str, config: Dict[str, Any
     output_path: str
         Path to the output data.
         Default is in the project-root/output.
+    config: Dict[str, Any]
+        Config.json for SEPA XML generation.
     """
     today_s = str(date.today())
     hit_credit = False
@@ -30,7 +32,7 @@ def create_sepa_xml(input_file: IO[str], output_path: str, config: Dict[str, Any
     sepa_debit = SepaDD(config, schema='pain.008.002.02', clean=True)
 
     echo('Getting Data...')
-    for payment in single_csv_row(input_file):
+    for i, payment in enumerate(single_csv_row(input_file)):
         p, p_type = _pack_data(payment)
 
         if p_type == 'credit':
@@ -42,10 +44,10 @@ def create_sepa_xml(input_file: IO[str], output_path: str, config: Dict[str, Any
             sepa_debit.add_payment(p)
 
     if hit_credit:
-        _generate_output(today_s + '_credit', sepa_credit.export(), output_path)
+        _generate_output(today_s + '_ueberweisung', sepa_credit.export(), output_path)
 
     if hit_debit:
-        _generate_output(today_s + '_debit', sepa_debit.export(), output_path)
+        _generate_output(today_s + '_gutschrift', sepa_debit.export(), output_path)
 
 
 def _generate_output(file_name: str, data: bytes, output_path: str) -> None:
@@ -89,18 +91,18 @@ def _pack_data(payment: List[str]) -> Tuple[Dict[str, Any], str]:
 
     # decide if credit or debit
     if int(payment[3]) < 0:
-        p_type = 'debit'
+        p_type = 'credit'
 
         res['amount'] = int(payment[3][1:])  # type: ignore
+        res['execution_date'] = payment[7]
+    else:
+        p_type = 'debit'
+
+        res['amount'] = int(payment[3])  # type: ignore
         res['type'] = 'RCUR'
         res['collection_date'] = date.today()  # type: ignore
         res['mandate_id'] = payment[5]
         res['mandate_date'] = payment[6]
-    else:
-        p_type = 'credit'
-
-        res['amount'] = int(payment[3])  # type: ignore
-        res['execution_date'] = payment[7]
 
     ret = (res, p_type)
     return ret
@@ -120,7 +122,10 @@ def _sanatize_data(data: List[str]) -> List[str]:
         Ready-to-go CSV data row.
     """
     # name
-    umlauts = {ord('ä'): 'ae', ord('ü'): 'ue', ord('ö'): 'oe', ord('ß'): 'ss'}
+    umlauts = {ord('Ä'): 'Ae', ord('ä'): 'ae',
+               ord('Ü'): 'Ue', ord('ü'): 'ue',
+               ord('Ö'): 'Oe', ord('ö'): 'oe',
+               ord('ß'): 'ss'}
     data[0] = unidecode(data[0].translate(umlauts))
 
     # BIC

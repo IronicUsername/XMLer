@@ -23,6 +23,10 @@ def cli(input_file: IO[str], output_path: Optional[str], header: bool) -> None:
     header: bool
         Wether a CSV file contains the table header or not.
         Default is 'True'.
+
+    Raises
+    ------
+    click.Abort
     """
     if input_file is not None and not input_file.name.endswith('csv'):
         click.echo('`input_file` has to be a CSV file.', file=sys.stderr)
