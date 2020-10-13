@@ -3,8 +3,8 @@ from typing import IO, Optional
 
 import click
 
-from .converter import create_payment
-from .utils import base_path, handle_output_path
+from xmler.converter import create_sepa_xml
+from xmler.utility import base_path, handle_output_path, init_config
 
 
 @click.command()
@@ -23,14 +23,19 @@ def cli(input_file: IO[str], output_path: Optional[str], header: bool) -> None:
     header: bool
         Wether a CSV file contains the table header or not.
         Default is 'True'.
+
+    Raises
+    ------
+    click.Abort
     """
     if input_file is not None and not input_file.name.endswith('csv'):
         click.echo('`input_file` has to be a CSV file.', file=sys.stderr)
         raise click.Abort()
 
+    conf = init_config()
     output_path = handle_output_path(output_path)
-
     if header:
         next(input_file)
 
-    create_payment(input_file, output_path)
+    create_sepa_xml(input_file, output_path, conf)
+    click.echo(click.style('Done.', fg='bright_green'))

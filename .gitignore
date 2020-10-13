@@ -31,4 +31,4 @@ myenv.sh
 # Other Stuff
 output/*
 config.json
-data/bspCSV_*
+tests/data/bspCSV_*
