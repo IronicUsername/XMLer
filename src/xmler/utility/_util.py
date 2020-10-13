@@ -9,7 +9,7 @@ from schema import SchemaError
 from xmler.config import CONF_STRUC, CONFIG
 
 
-def base_path() -> str:
+def base_path() -> str:  # pragma: no cover
     """Path to project root."""
     return os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '../../..'))
 
@@ -18,15 +18,13 @@ def handle_output_path(out_path: str) -> str:
     """Creates output directory if needed also sanitizes output path string."""
     if not out_path.endswith('/'):
         out_path = out_path + '/'
-
     if not os.path.exists(os.path.dirname(out_path)):
         echo('Creating directory...')
         os.makedirs(os.path.dirname(out_path))
-
     return out_path
 
 
-def init_config() -> None:
+def init_config() -> None:  # pragma: no cover
     """Initialize config."""
     cnfg_path = base_path() + '/config.json'
     cnfg = None
@@ -37,24 +35,16 @@ def init_config() -> None:
         echo(style('No config file found!\n', fg='red')
              + 'Continuing with default config...\n')
         res = CONFIG
-
     if cnfg is not None and _set_config(cnfg):
         res = cnfg
-
     return res
 
 
 def _set_config(conf: Dict[str, Any]) -> Dict[str, Any]:
     """Checks the validity of the given config file."""
     if not _validate_config(CONF_STRUC, conf):
-        echo('Continue with default config file?')
-        answer = input('(y)es/(n)o: ')
-        if answer in ['y', 'yes']:
-            conf = CONFIG
-        elif answer in ['n', 'no']:
-            echo(style('Stoping.', fg='red'))
-            sys.exit(1)
-
+        echo(style('Continuing with default config.json...', fg='yellow'))
+        conf = CONFIG
     return conf
 
 

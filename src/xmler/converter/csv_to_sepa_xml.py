@@ -38,14 +38,12 @@ def create_sepa_xml(input_file: IO[str], output_path: str, config: Dict[str, Any
         if p_type == 'credit':
             hit_credit = True
             sepa_credit.add_payment(p)
-
         if p_type == 'debit':
             hit_debit = True
             sepa_debit.add_payment(p)
 
     if hit_credit:
         _generate_output(today_s + '_ueberweisung', sepa_credit.export(), output_path)
-
     if hit_debit:
         _generate_output(today_s + '_gutschrift', sepa_debit.export(), output_path)
 
@@ -57,14 +55,12 @@ def _generate_output(file_name: str, data: bytes, output_path: str) -> None:
 
     total_size = len(data)
     block_size = 1024
-
     with tqdm(total=total_size, position=0, leave=True, bar_format='{desc:<5.5}{percentage:3.0f}%|{bar:50}{r_bar}') as pbar:
         with open(out_path, 'wb') as f:
             for i in (data[i: i + block_size] for i in range(0, len(data), block_size)):
                 pbar.update(len(i))
                 f.write(i)
                 sleep(0.001)
-
     echo('File saved.\n')
     f.close
 
@@ -92,18 +88,15 @@ def _pack_data(payment: List[str]) -> Tuple[Dict[str, Any], str]:
     # decide if credit or debit
     if int(payment[3]) < 0:
         p_type = 'credit'
-
         res['amount'] = int(payment[3][1:])  # type: ignore
         res['execution_date'] = payment[7]
     else:
         p_type = 'debit'
-
         res['amount'] = int(payment[3])  # type: ignore
         res['type'] = 'RCUR'
         res['collection_date'] = date.today()  # type: ignore
         res['mandate_id'] = payment[5]
         res['mandate_date'] = payment[6]
-
     ret = (res, p_type)
     return ret
 
@@ -144,7 +137,6 @@ def _sanatize_data(data: List[str]) -> List[str]:
 
     # mandate date
     data[6] = datetime.strptime(data[6], '%d.%m.%Y').date() if data[6] else date.today()
-
     # execution date
     data[7] = datetime.strptime(data[7], '%d.%m.%Y').date() if data[7] else date.today()
 

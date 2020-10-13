@@ -11,10 +11,13 @@ You have to create a `config.json` in the project root.<br>
     "IBAN": "NL50BANK1234567890",
     "BIC": "BANKNL2A",
     "batch": True,
-    "creditor_id": "DE26ZZZ00000000000",  # supplied by your bank or financial authority
-    "currency": "EUR",  # ISO 4217
+    "creditor_id": "DE26ZZZ00000000000",
+    "currency": "EUR"
 }
 ```
+Notes:
+- `creditor_id`: supplied by your bank or financial authority
+- `currency`: has to be in `ISO 4217` format
 
 ## install & run
 Basic usage:
