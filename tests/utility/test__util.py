@@ -57,6 +57,8 @@ from xmler.utility._util import _set_config, handle_output_path, single_csv_row
 ])
 def test_set_config(data, solution):
     res = _set_config(data)
+    print('dis is res: ', res)
+    print('dis is solution: ', solution)
     assert solution == res
 
 
@@ -102,6 +104,7 @@ def test_single_csv_row(f_position, solution, test_data_path):
             break
 
     assert res == solution
+    t_file.close()
 
 
 def test_single_csv_row_empty_file(test_data_path):
@@ -113,3 +116,4 @@ def test_single_csv_row_empty_file(test_data_path):
 
     assert pytest_wrap.type == SystemExit
     assert pytest_wrap.value.code == 1
+    t_file.close()
